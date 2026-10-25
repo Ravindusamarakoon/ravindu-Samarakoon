@@ -1,0 +1,1508 @@
+<!DOCTYPE html>
+<html lang="en" class="h-full bg-slate-50">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Campus Batch & Staff Merchandise Order Portal</title>
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Font Awesome Icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <!-- Google Fonts Inter -->
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['Inter', 'sans-serif'],
+          },
+          colors: {
+            brand: {
+              50: '#eef2ff',
+              100: '#e0e7ff',
+              500: '#6366f1',
+              600: '#4f46e5',
+              700: '#4338ca',
+              900: '#312e81',
+            }
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    body { font-family: 'Inter', sans-serif; }
+    .custom-scrollbar::-webkit-scrollbar {
+      width: 6px;
+      height: 6px;
+    }
+    .custom-scrollbar::-webkit-scrollbar-track {
+      background: rgba(0, 0, 0, 0.05);
+    }
+    .custom-scrollbar::-webkit-scrollbar-thumb {
+      background: rgba(99, 102, 241, 0.3);
+      border-radius: 9999px;
+    }
+  </style>
+</head>
+<body class="min-h-screen flex flex-col bg-slate-50 text-slate-800 antialiased selection:bg-indigo-500 selection:text-white">
+
+  <!-- Toast Notification -->
+  <div id="toastNotification" class="fixed top-20 right-4 z-50 transform translate-x-full transition-transform duration-300 ease-in-out bg-emerald-600 text-white px-5 py-3 rounded-xl shadow-xl flex items-center space-x-3 text-xs font-bold">
+    <i class="fa-solid fa-circle-check text-base"></i>
+    <span id="toastMessage">Order saved successfully!</span>
+  </div>
+
+  <!-- Header -->
+  <header class="sticky top-0 z-30 bg-slate-900/95 backdrop-blur-md border-b border-slate-800 text-white">
+    <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+      <div class="flex items-center space-x-3">
+        <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-indigo-500 to-purple-500 flex items-center justify-center text-white font-extrabold text-xl shadow-lg shadow-indigo-500/30">
+          <i class="fa-solid fa-graduation-cap"></i>
+        </div>
+        <div>
+          <h1 class="font-bold text-base sm:text-lg leading-tight tracking-wide bg-gradient-to-r from-white via-indigo-100 to-indigo-300 bg-clip-text text-transparent">
+            CAMPUS MERCHANDISE PORTAL
+          </h1>
+          <p class="text-xs text-slate-400">Students • Lecturers • Demonstrators • Official Order Portal</p>
+        </div>
+      </div>
+
+      <div class="flex items-center space-x-2 sm:space-x-3">
+        <button id="openSizeGuideBtn" onclick="toggleModal('sizeGuideModal', true)" class="px-3 py-1.5 rounded-lg text-xs font-semibold bg-slate-800 hover:bg-slate-700 text-indigo-300 border border-indigo-500/30 transition flex items-center gap-1.5">
+          <i class="fa-solid fa-ruler-combined"></i>
+          <span class="hidden sm:inline">Size Guide</span>
+        </button>
+        <button id="toggleAdminBtn" onclick="toggleAdminView()" class="px-3 py-1.5 rounded-lg text-xs font-semibold bg-indigo-600 hover:bg-indigo-500 text-white shadow-md shadow-indigo-600/30 transition flex items-center gap-1.5">
+          <i class="fa-solid fa-chart-line"></i>
+          <span id="adminBtnText">Admin Dashboard</span>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- MAIN WRAPPER -->
+  <main class="flex-1 max-w-5xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8 flex flex-col">
+
+    <!-- USER WIZARD VIEW -->
+    <div id="userPortalView" class="space-y-6 flex-1 flex flex-col">
+
+      <!-- EDITING MODE BANNER -->
+      <div id="editingModeBanner" class="hidden bg-amber-500/10 border border-amber-500/30 rounded-2xl p-3.5 flex items-center justify-between text-amber-900 text-xs font-semibold">
+        <div class="flex items-center space-x-2">
+          <i class="fa-solid fa-pen-to-square text-amber-600 text-base"></i>
+          <span>Editing Order for: <strong id="editingIdentifierText" class="font-mono underline"></strong></span>
+        </div>
+        <button type="button" onclick="cancelEditingMode()" class="text-slate-600 hover:text-slate-900 text-xs font-bold bg-white px-2.5 py-1 rounded-lg border border-slate-200 shadow-xs">
+          Cancel / Reset
+        </button>
+      </div>
+
+      <!-- MULTI-STEP PROGRESS INDICATOR -->
+      <div class="bg-white rounded-2xl p-4 sm:p-6 border border-slate-200/80 shadow-xs space-y-4">
+        <div class="flex items-center justify-between text-xs font-bold text-slate-500">
+          <span id="stepCounterText">Step 1 of 4</span>
+          <span id="stepTitleHeader" class="text-indigo-600 font-extrabold uppercase tracking-wider">Role & Identity</span>
+        </div>
+
+        <!-- Progress Bar -->
+        <div class="w-full bg-slate-100 h-2 rounded-full overflow-hidden">
+          <div id="progressBar" class="bg-gradient-to-r from-indigo-500 to-purple-600 h-full w-1/4 transition-all duration-300"></div>
+        </div>
+
+        <!-- Wizard Step Nodes -->
+        <div class="grid grid-cols-4 gap-2 pt-1 text-center">
+          <div id="node-1" class="step-node font-bold text-xs text-indigo-600 flex flex-col items-center space-y-1">
+            <div class="w-7 h-7 rounded-full bg-indigo-600 text-white flex items-center justify-center text-xs font-bold shadow-md shadow-indigo-500/20">1</div>
+            <span class="hidden sm:inline">Role & Identity</span>
+          </div>
+          <div id="node-2" class="step-node font-medium text-xs text-slate-400 flex flex-col items-center space-y-1">
+            <div class="w-7 h-7 rounded-full bg-slate-200 text-slate-600 flex items-center justify-center text-xs font-bold">2</div>
+            <span class="hidden sm:inline">Select Items</span>
+          </div>
+          <div id="node-3" class="step-node font-medium text-xs text-slate-400 flex flex-col items-center space-y-1">
+            <div class="w-7 h-7 rounded-full bg-slate-200 text-slate-600 flex items-center justify-center text-xs font-bold">3</div>
+            <span class="hidden sm:inline">Customization</span>
+          </div>
+          <div id="node-4" class="step-node font-medium text-xs text-slate-400 flex flex-col items-center space-y-1">
+            <div class="w-7 h-7 rounded-full bg-slate-200 text-slate-600 flex items-center justify-center text-xs font-bold">4</div>
+            <span class="hidden sm:inline">Review & Confirm</span>
+          </div>
+        </div>
+      </div>
+
+
+      <!-- FORM STEP CONTAINER -->
+      <form id="wizardForm" onsubmit="event.preventDefault();" class="flex-1 flex flex-col space-y-6">
+
+        <!-- STEP 1: ROLE & IDENTITY SECTION -->
+        <div id="step-1" class="step-page bg-white rounded-2xl p-6 border border-slate-200/80 shadow-xs space-y-6">
+          
+          <!-- Dedicated Edit My Order Tab/Card -->
+          <div class="bg-indigo-900/5 border border-indigo-200/80 rounded-2xl p-4 sm:p-5 space-y-3">
+            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+              <div class="flex items-center space-x-3">
+                <div class="w-10 h-10 rounded-xl bg-indigo-600 text-white flex items-center justify-center font-bold text-base shrink-0 shadow-md">
+                  <i class="fa-solid fa-pen-to-square"></i>
+                </div>
+                <div>
+                  <h3 class="font-bold text-slate-900 text-sm sm:text-base">Edit Existing Response</h3>
+                  <p class="text-xs text-slate-500">Already submitted? Pick your record below to load and modify your order.</p>
+                </div>
+              </div>
+
+              <button type="button" onclick="toggleModal('contactRepModal', true)" class="px-3.5 py-2 bg-white hover:bg-slate-50 text-slate-700 text-xs font-bold rounded-xl border border-slate-300 transition shrink-0 flex items-center justify-center gap-1.5 shadow-2xs">
+                <i class="fa-solid fa-headset text-indigo-600"></i>
+                Contact Coordinator
+              </button>
+            </div>
+
+            <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 pt-1">
+              <div class="sm:col-span-2">
+                <select id="editRegSelect" onchange="loadOrderFromEditSelect(this.value)" class="w-full bg-white border border-slate-300 rounded-xl px-4 py-2.5 text-xs font-semibold focus:ring-2 focus:ring-indigo-500 outline-none transition cursor-pointer">
+                  <option value="" disabled selected>-- Select from Submitted Orders (Students & Staff) --</option>
+                  <!-- JS Populated ONLY with submitted responses -->
+                </select>
+              </div>
+              <button type="button" onclick="triggerEditFromDropdown()" class="px-4 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold rounded-xl transition shadow-xs flex items-center justify-center gap-2">
+                <i class="fa-solid fa-sliders text-xs"></i>
+                Load & Edit Selection
+              </button>
+            </div>
+          </div>
+
+          <!-- ROLE SELECTOR -->
+          <div class="space-y-4 pt-2">
+            <div class="border-b border-slate-100 pb-3">
+              <h3 class="font-bold text-slate-800 text-base">Select Your Role & Identity</h3>
+              <p class="text-xs text-slate-500">Please choose whether you are a Student, Lecturer, or Demonstrator.</p>
+            </div>
+
+            <div>
+              <label class="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-2">
+                User Role <span class="text-red-500">*</span>
+              </label>
+              <div class="grid grid-cols-3 gap-3">
+                <button type="button" id="roleBtnStudent" onclick="selectUserRole('Student')" class="py-3 px-4 rounded-xl border-2 font-bold text-xs flex flex-col items-center justify-center gap-1.5 transition border-indigo-600 bg-indigo-50/80 text-indigo-700">
+                  <i class="fa-solid fa-user-graduate text-base"></i>
+                  <span>Student</span>
+                </button>
+                <button type="button" id="roleBtnLecturer" onclick="selectUserRole('Lecturer')" class="py-3 px-4 rounded-xl border-2 font-bold text-xs flex flex-col items-center justify-center gap-1.5 transition border-slate-200 bg-white text-slate-600 hover:border-slate-300">
+                  <i class="fa-solid fa-chalkboard-user text-base"></i>
+                  <span>Lecturer</span>
+                </button>
+                <button type="button" id="roleBtnDemonstrator" onclick="selectUserRole('Demonstrator')" class="py-3 px-4 rounded-xl border-2 font-bold text-xs flex flex-col items-center justify-center gap-1.5 transition border-slate-200 bg-white text-slate-600 hover:border-slate-300">
+                  <i class="fa-solid fa-flask-vial text-base"></i>
+                  <span>Demonstrator</span>
+                </button>
+              </div>
+            </div>
+
+            <!-- DYNAMIC ROLE FIELDS -->
+            <!-- Student Input Group -->
+            <div id="studentInputGroup" class="space-y-4">
+              <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label class="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-2">
+                    Student Registration Number <span class="text-red-500">*</span>
+                  </label>
+                  <div class="relative">
+                    <select id="regNumberSelect" onchange="handleRegSelect(this.value)" class="w-full bg-slate-50 border border-slate-300 rounded-xl px-4 py-2.5 text-sm font-medium focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition appearance-none cursor-pointer">
+                      <option value="" disabled selected>-- Select your Student Reg No --</option>
+                      <!-- JS populated -->
+                    </select>
+                    <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-4 text-slate-500">
+                      <i class="fa-solid fa-chevron-down text-xs"></i>
+                    </div>
+                  </div>
+                  <p id="regError" class="text-xs text-red-500 mt-1 hidden">Please select a valid Registration Number</p>
+                </div>
+
+                <div>
+                  <label class="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-2">
+                    Student Full Name
+                  </label>
+                  <div class="relative">
+                    <input type="text" id="studentNameInput" readonly placeholder="Name auto-fills upon selection" class="w-full bg-slate-100 border border-slate-300 rounded-xl px-4 py-2.5 text-sm font-semibold text-slate-700 outline-none cursor-not-allowed" />
+                    <div class="absolute inset-y-0 right-0 flex items-center px-4 text-slate-400">
+                      <i class="fa-solid fa-user-check text-xs"></i>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Staff Input Group (Lecturers & Demonstrators) -->
+            <div id="staffInputGroup" class="hidden space-y-4">
+              <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div>
+                  <label class="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-2">
+                    Staff ID / EPF No <span class="text-red-500">*</span>
+                  </label>
+                  <input type="text" id="staffIdInput" placeholder="e.g. STF-804" class="w-full bg-slate-50 border border-slate-300 rounded-xl px-4 py-2.5 text-sm font-medium focus:ring-2 focus:ring-indigo-500 outline-none" />
+                  <p id="staffIdError" class="text-xs text-red-500 mt-1 hidden">Please enter your Staff ID</p>
+                </div>
+
+                <div>
+                  <label class="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-2">
+                    Full Name & Title <span class="text-red-500">*</span>
+                  </label>
+                  <input type="text" id="staffNameInput" placeholder="e.g. Dr. K. L. Perera" class="w-full bg-slate-50 border border-slate-300 rounded-xl px-4 py-2.5 text-sm font-medium focus:ring-2 focus:ring-indigo-500 outline-none" />
+                  <p id="staffNameError" class="text-xs text-red-500 mt-1 hidden">Please enter your name</p>
+                </div>
+
+                <div>
+                  <label class="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-2">
+                    Department / Unit <span class="text-red-500">*</span>
+                  </label>
+                  <select id="staffDeptSelect" class="w-full bg-slate-50 border border-slate-300 rounded-xl px-4 py-2.5 text-sm font-medium focus:ring-2 focus:ring-indigo-500 outline-none transition appearance-none cursor-pointer">
+                    <option value="" disabled selected>-- Select Department --</option>
+                    <option value="Computer Science">Dept. of Computer Science</option>
+                    <option value="Zoology & Env Management">Dept. of Zoology & Env. Mgt.</option>
+                    <option value="Chemistry">Dept. of Chemistry</option>
+                    <option value="Botany">Dept. of Botany</option>
+                    <option value="Physics & Electronics">Dept. of Physics & Electronics</option>
+                    <option value="Mathematics">Dept. of Mathematics</option>
+                    <option value="Statistics">Dept. of Statistics</option>
+                    <option value="Dean's Office">Dean's Office / Administration</option>
+                  </select>
+                  <p id="staffDeptError" class="text-xs text-red-500 mt-1 hidden">Please select your department</p>
+                </div>
+              </div>
+            </div>
+
+            <!-- ALREADY SUBMITTED WARNING CARD -->
+            <div id="alreadySubmittedAlert" class="hidden bg-amber-50 border-2 border-amber-300/80 rounded-2xl p-4 text-xs text-amber-900 space-y-3">
+              <div class="flex items-start justify-between">
+                <div class="flex items-center space-x-2 text-amber-800 font-bold text-sm">
+                  <i class="fa-solid fa-circle-exclamation text-amber-600 text-base"></i>
+                  <span>Order Recorded for <span id="submittedStudentName" class="underline"></span></span>
+                </div>
+                <span id="submittedStudentBadge" class="bg-amber-200/70 text-amber-900 px-2.5 py-0.5 rounded-full font-bold text-[11px]">Submitted</span>
+              </div>
+
+              <p class="leading-relaxed">
+                You have already submitted your order preferences! If you need to edit it, please go to the 'Edit Existing Response' section above or contact your coordinator.
+              </p>
+
+              <div class="flex flex-wrap items-center gap-2 pt-1">
+                <button type="button" onclick="loadSelectedOrderForEdit()" class="px-3.5 py-2 bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-xl transition shadow-xs flex items-center gap-1.5">
+                  <i class="fa-solid fa-pen-to-square"></i>
+                  Jump to Edit Order Section
+                </button>
+                <button type="button" onclick="toggleModal('contactRepModal', true)" class="px-3.5 py-2 bg-white hover:bg-slate-100 text-slate-800 font-bold rounded-xl border border-slate-300 transition flex items-center gap-1.5">
+                  <i class="fa-solid fa-headset text-amber-600"></i>
+                  Contact Coordinator
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+
+        <!-- STEP 2: ITEM SELECTION -->
+        <div id="step-2" class="step-page hidden bg-white rounded-2xl p-6 border border-slate-200/80 shadow-xs space-y-6">
+          <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-100 pb-4">
+            <div>
+              <h3 class="font-bold text-slate-800 text-base">Select Batch / Faculty Merchandise</h3>
+              <p class="text-xs text-slate-500">Pick individual items or get the complete bundle for a 10% discount.</p>
+            </div>
+            <button type="button" onclick="selectAllBundle()" class="inline-flex items-center justify-center px-4 py-2 rounded-xl text-xs font-bold bg-indigo-50 hover:bg-indigo-100 text-indigo-700 border border-indigo-200 transition gap-2 shadow-xs">
+              <i class="fa-solid fa-wand-magic-sparkles text-indigo-600"></i>
+              Select All Bundle (10% Off)
+            </button>
+          </div>
+
+          <!-- Items Grid -->
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+
+            <!-- Card: Shirt -->
+            <div id="card-shirt" onclick="toggleItem('shirt')" class="cursor-pointer bg-white rounded-2xl border-2 border-slate-200 hover:border-indigo-300 p-5 transition-all duration-200 flex flex-col justify-between space-y-4">
+              <div class="flex items-start justify-between">
+                <div class="flex items-center space-x-3">
+                  <div class="w-10 h-10 rounded-xl bg-indigo-100 text-indigo-600 flex items-center justify-center text-lg font-bold">
+                    <i class="fa-solid fa-shirt"></i>
+                  </div>
+                  <div>
+                    <h4 class="font-bold text-slate-800 text-sm">Campus Cotton Shirt</h4>
+                    <p class="text-[11px] text-slate-500">220 GSM Premium Cotton • Title Embroidery</p>
+                  </div>
+                </div>
+                <span class="text-base font-extrabold text-indigo-600">$18</span>
+              </div>
+              <div class="flex items-center justify-between pt-2 border-t border-slate-100 text-xs">
+                <span class="text-slate-500 font-medium">Includes Faculty Crest</span>
+                <span id="btnToggleShirt" class="px-3 py-1 rounded-lg font-bold bg-slate-100 text-slate-600">+ Add</span>
+              </div>
+            </div>
+
+            <!-- Card: Jersey -->
+            <div id="card-jersey" onclick="toggleItem('jersey')" class="cursor-pointer bg-white rounded-2xl border-2 border-slate-200 hover:border-indigo-300 p-5 transition-all duration-200 flex flex-col justify-between space-y-4">
+              <div class="flex items-start justify-between">
+                <div class="flex items-center space-x-3">
+                  <div class="w-10 h-10 rounded-xl bg-purple-100 text-purple-600 flex items-center justify-center text-lg font-bold">
+                    <i class="fa-solid fa-vest"></i>
+                  </div>
+                  <div>
+                    <h4 class="font-bold text-slate-800 text-sm">Athletic Campus Jersey</h4>
+                    <p class="text-[11px] text-slate-500">Breathable Mesh • Sublimated Design</p>
+                  </div>
+                </div>
+                <span class="text-base font-extrabold text-purple-600">$22</span>
+              </div>
+              <div class="flex items-center justify-between pt-2 border-t border-slate-100 text-xs">
+                <span class="text-slate-500 font-medium">Custom Name & Dept Print</span>
+                <span id="btnToggleJersey" class="px-3 py-1 rounded-lg font-bold bg-slate-100 text-slate-600">+ Add</span>
+              </div>
+            </div>
+
+            <!-- Card: Diary -->
+            <div id="card-diary" onclick="toggleItem('diary')" class="cursor-pointer bg-white rounded-2xl border-2 border-slate-200 hover:border-indigo-300 p-5 transition-all duration-200 flex flex-col justify-between space-y-4">
+              <div class="flex items-start justify-between">
+                <div class="flex items-center space-x-3">
+                  <div class="w-10 h-10 rounded-xl bg-amber-100 text-amber-600 flex items-center justify-center text-lg font-bold">
+                    <i class="fa-solid fa-book-bookmark"></i>
+                  </div>
+                  <div>
+                    <h4 class="font-bold text-slate-800 text-sm">Academic Hardcover Diary</h4>
+                    <p class="text-[11px] text-slate-500">200 Pages • Gold Embossed Crest</p>
+                  </div>
+                </div>
+                <span class="text-base font-extrabold text-amber-600">$10</span>
+              </div>
+              <div class="flex items-center justify-between pt-2 border-t border-slate-100 text-xs">
+                <span class="text-slate-500 font-medium">Faculty Edition</span>
+                <span id="btnToggleDiary" class="px-3 py-1 rounded-lg font-bold bg-slate-100 text-slate-600">+ Add</span>
+              </div>
+            </div>
+
+            <!-- Card: Laptop Sleeve -->
+            <div id="card-laptop" onclick="toggleItem('laptop')" class="cursor-pointer bg-white rounded-2xl border-2 border-slate-200 hover:border-indigo-300 p-5 transition-all duration-200 flex flex-col justify-between space-y-4">
+              <div class="flex items-start justify-between">
+                <div class="flex items-center space-x-3">
+                  <div class="w-10 h-10 rounded-xl bg-teal-100 text-teal-600 flex items-center justify-center text-lg font-bold">
+                    <i class="fa-solid fa-laptop"></i>
+                  </div>
+                  <div>
+                    <h4 class="font-bold text-slate-800 text-sm">Neoprene Laptop Case</h4>
+                    <p class="text-[11px] text-slate-500">Padded Protection • Water Resistant</p>
+                  </div>
+                </div>
+                <span class="text-base font-extrabold text-teal-600">$15</span>
+              </div>
+              <div class="flex items-center justify-between pt-2 border-t border-slate-100 text-xs">
+                <span class="text-slate-500 font-medium">Multiple Sizes</span>
+                <span id="btnToggleLaptop" class="px-3 py-1 rounded-lg font-bold bg-slate-100 text-slate-600">+ Add</span>
+              </div>
+            </div>
+
+          </div>
+        </div>
+
+
+        <!-- STEP 3: CUSTOMIZATION & SIZING -->
+        <div id="step-3" class="step-page hidden bg-white rounded-2xl p-6 border border-slate-200/80 shadow-xs space-y-6">
+          <div class="border-b border-slate-100 pb-3 flex items-center justify-between">
+            <div>
+              <h3 class="font-bold text-slate-800 text-base">Customization & Sizing Options</h3>
+              <p class="text-xs text-slate-500">Provide exact sizing details and optional title/embroidery for your selected items.</p>
+            </div>
+            <button type="button" onclick="toggleModal('sizeGuideModal', true)" class="text-xs font-bold text-indigo-600 hover:underline">
+              <i class="fa-solid fa-ruler-combined mr-1"></i> View Size Chart
+            </button>
+          </div>
+
+          <!-- Dynamic Options Section -->
+          <div id="customizationContainer" class="space-y-6">
+            <!-- JS dynamically injects options based on chosen items and user role -->
+          </div>
+
+          <!-- Comments / Suggestions -->
+          <div class="space-y-2 pt-2 border-t border-slate-100">
+            <label class="block text-xs font-bold text-slate-700 uppercase">Additional Comments / Design Preferences</label>
+            <textarea id="orderNotes" rows="2" placeholder="e.g. Prefer subtle chest logo, specific sleeve cut..." class="w-full bg-slate-50 border border-slate-300 rounded-xl p-3 text-xs focus:ring-2 focus:ring-indigo-500 outline-none"></textarea>
+          </div>
+        </div>
+
+
+        <!-- STEP 4: REVIEW & CONFIRM -->
+        <div id="step-4" class="step-page hidden bg-white rounded-2xl p-6 border border-slate-200/80 shadow-xs space-y-6">
+          <div class="border-b border-slate-100 pb-3">
+            <h3 class="font-bold text-slate-800 text-base">Review Your Order Summary</h3>
+            <p class="text-xs text-slate-500">Please double check your information before submitting.</p>
+          </div>
+
+          <div class="space-y-4 text-xs">
+            <!-- User Info Header Box -->
+            <div class="bg-indigo-50/80 p-4 rounded-xl border border-indigo-100 flex items-center justify-between">
+              <div>
+                <div class="flex items-center space-x-2">
+                  <span id="reviewRoleBadge" class="px-2 py-0.5 text-[10px] font-bold rounded-md bg-indigo-600 text-white uppercase">Student</span>
+                  <span id="reviewIdText" class="font-mono font-bold text-indigo-900 text-xs">-</span>
+                </div>
+                <p id="reviewNameText" class="font-extrabold text-slate-800 text-sm mt-0.5">-</p>
+                <p id="reviewSubDetailText" class="text-slate-500 text-[11px]">-</p>
+              </div>
+              <button type="button" onclick="goToStep(1)" class="text-indigo-600 font-bold hover:underline text-xs">
+                Edit Step 1
+              </button>
+            </div>
+
+            <!-- Items Table -->
+            <div class="border border-slate-200 rounded-xl overflow-hidden">
+              <table class="w-full text-left">
+                <thead class="bg-slate-50 text-slate-600 font-bold border-b border-slate-200 uppercase text-[10px] tracking-wider">
+                  <tr>
+                    <th class="p-3">Item Name</th>
+                    <th class="p-3">Details / Size / Customization</th>
+                    <th class="p-3 text-right">Price</th>
+                  </tr>
+                </thead>
+                <tbody id="reviewTableBody" class="divide-y divide-slate-100 font-medium text-slate-700">
+                  <!-- JS populated -->
+                </tbody>
+              </table>
+            </div>
+
+            <!-- Order Total Summary Card -->
+            <div class="bg-slate-900 text-white p-4 rounded-xl flex items-center justify-between">
+              <div>
+                <p id="reviewBundleDiscountBadge" class="hidden text-[10px] bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 px-2 py-0.5 rounded-full font-bold w-max mb-1">
+                  10% Bundle Discount Applied!
+                </p>
+                <p class="text-xs text-slate-400">Total Estimated Cost</p>
+              </div>
+              <span id="reviewTotalPrice" class="text-2xl font-black text-white">$0.00</span>
+            </div>
+          </div>
+        </div>
+
+      </form>
+
+      <!-- NAVIGATION STEP CONTROLS -->
+      <div class="bg-white rounded-2xl p-4 border border-slate-200/80 shadow-xs flex items-center justify-between">
+        <button type="button" id="prevBtn" onclick="navigateStep(-1)" class="px-5 py-2.5 rounded-xl text-xs font-bold bg-slate-100 hover:bg-slate-200 text-slate-700 transition disabled:opacity-40 disabled:cursor-not-allowed">
+          <i class="fa-solid fa-arrow-left mr-1.5"></i> Back
+        </button>
+
+        <div class="text-right">
+          <button type="button" id="nextBtn" onclick="navigateStep(1)" class="px-6 py-2.5 rounded-xl text-xs font-bold bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-500 hover:to-purple-500 text-white shadow-md shadow-indigo-600/30 transition">
+            <span id="nextBtnText">Next Step</span>
+            <i id="nextBtnIcon" class="fa-solid fa-arrow-right ml-1.5"></i>
+          </button>
+        </div>
+      </div>
+
+    </div>
+    <!-- END USER PORTAL VIEW -->
+
+
+    <!-- ADMIN DASHBOARD VIEW -->
+    <div id="adminDashboardView" class="hidden space-y-6">
+
+      <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-slate-900 text-white p-6 rounded-2xl shadow-lg border border-slate-800">
+        <div>
+          <div class="flex items-center space-x-2">
+            <span class="px-2.5 py-0.5 rounded-full text-[10px] font-extrabold uppercase tracking-wider bg-indigo-500/20 text-indigo-300 border border-indigo-500/30">
+              Admin Insights
+            </span>
+            <span class="text-xs text-slate-400">Database Breakdown</span>
+          </div>
+          <h2 class="text-2xl font-black mt-1">Merchandise Orders Summary</h2>
+        </div>
+
+        <div class="flex items-center space-x-2">
+          <button onclick="exportCSV()" class="px-4 py-2 bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold rounded-xl shadow-md transition flex items-center gap-2">
+            <i class="fa-solid fa-file-csv text-sm"></i>
+            Export Full CSV
+          </button>
+          <button onclick="clearAllData()" class="px-3 py-2 bg-slate-800 hover:bg-red-900/40 text-slate-400 hover:text-red-300 text-xs font-semibold rounded-xl border border-slate-700 transition">
+            <i class="fa-solid fa-trash-can"></i>
+          </button>
+        </div>
+      </div>
+
+      <!-- Metrics Breakdown -->
+      <div class="grid grid-cols-2 lg:grid-cols-5 gap-3">
+        <div class="bg-white p-4 rounded-2xl border border-slate-200 shadow-xs">
+          <p class="text-[10px] font-bold text-slate-400 uppercase">Total Orders</p>
+          <p id="statTotalSubmissions" class="text-2xl font-black text-slate-800 mt-1">0</p>
+        </div>
+        <div class="bg-white p-4 rounded-2xl border border-slate-200 shadow-xs">
+          <p class="text-[10px] font-bold text-indigo-500 uppercase">Students</p>
+          <p id="statTotalStudents" class="text-2xl font-black text-indigo-600 mt-1">0</p>
+        </div>
+        <div class="bg-white p-4 rounded-2xl border border-slate-200 shadow-xs">
+          <p class="text-[10px] font-bold text-purple-500 uppercase">Lecturers</p>
+          <p id="statTotalLecturers" class="text-2xl font-black text-purple-600 mt-1">0</p>
+        </div>
+        <div class="bg-white p-4 rounded-2xl border border-slate-200 shadow-xs">
+          <p class="text-[10px] font-bold text-amber-500 uppercase">Demonstrators</p>
+          <p id="statTotalDemonstrators" class="text-2xl font-black text-amber-600 mt-1">0</p>
+        </div>
+        <div class="bg-white p-4 rounded-2xl border border-slate-200 shadow-xs col-span-2 sm:col-span-1">
+          <p class="text-[10px] font-bold text-teal-500 uppercase">Est. Revenue</p>
+          <p id="statTotalRevenue" class="text-2xl font-black text-teal-600 mt-1">$0</p>
+        </div>
+      </div>
+
+      <!-- Item Bars -->
+      <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-xs space-y-4">
+        <h3 class="font-bold text-slate-800 text-xs uppercase tracking-wider">Overall Item Demand</h3>
+        <div class="space-y-3" id="adminItemBars"></div>
+      </div>
+
+      <!-- Admin Table & Filter -->
+      <div class="bg-white rounded-2xl border border-slate-200 shadow-xs overflow-hidden">
+        <div class="p-4 sm:p-5 border-b border-slate-100 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+          <div class="flex items-center space-x-2">
+            <h3 class="font-bold text-slate-800 text-sm uppercase tracking-wider">All Submissions</h3>
+            <span class="text-xs text-slate-400" id="tableCountText">(0 entries)</span>
+          </div>
+
+          <!-- Role Filter -->
+          <div class="flex items-center space-x-2 text-xs font-semibold">
+            <span class="text-slate-500">Filter Role:</span>
+            <select id="adminRoleFilter" onchange="renderAdminDashboard()" class="bg-slate-100 border border-slate-300 rounded-lg px-2.5 py-1 text-xs outline-none">
+              <option value="ALL">All Roles</option>
+              <option value="Student">Students Only</option>
+              <option value="Lecturer">Lecturers Only</option>
+              <option value="Demonstrator">Demonstrators Only</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="overflow-x-auto custom-scrollbar">
+          <table class="w-full text-left text-xs text-slate-600">
+            <thead class="bg-slate-50 text-slate-700 font-bold uppercase tracking-wider border-b border-slate-200">
+              <tr>
+                <th class="p-3.5">Role</th>
+                <th class="p-3.5">ID / Reg No</th>
+                <th class="p-3.5">Name</th>
+                <th class="p-3.5">Dept / Info</th>
+                <th class="p-3.5">Items</th>
+                <th class="p-3.5">Sizes</th>
+                <th class="p-3.5">Total ($)</th>
+                <th class="p-3.5 text-center">Actions</th>
+              </tr>
+            </thead>
+            <tbody id="adminTableBody" class="divide-y divide-slate-100"></tbody>
+          </table>
+        </div>
+      </div>
+
+    </div>
+
+  </main>
+
+
+  <!-- CONTACT COORDINATOR MODAL -->
+  <div id="contactRepModal" class="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm hidden flex items-center justify-center p-4">
+    <div class="bg-white rounded-2xl max-w-md w-full p-6 space-y-4 shadow-2xl border border-slate-200">
+      <div class="flex items-center justify-between border-b border-slate-100 pb-3">
+        <div class="flex items-center space-x-2 text-indigo-600 font-bold text-base">
+          <i class="fa-solid fa-headset"></i>
+          <span>Merchandise Coordinator Contact</span>
+        </div>
+        <button onclick="toggleModal('contactRepModal', false)" class="text-slate-400 hover:text-slate-600">
+          <i class="fa-solid fa-xmark text-lg"></i>
+        </button>
+      </div>
+
+      <p class="text-xs text-slate-600 leading-relaxed">
+        For inquiries regarding custom staff embroidery, bulk sizing orders, or updating your response:
+      </p>
+
+      <div class="bg-indigo-50/80 p-4 rounded-xl border border-indigo-100 text-xs text-indigo-950 space-y-2.5">
+        <div class="flex items-center space-x-3">
+          <div class="w-8 h-8 rounded-lg bg-indigo-600 text-white flex items-center justify-center shrink-0 font-bold">
+            <i class="fa-solid fa-user-tie"></i>
+          </div>
+          <div>
+            <p class="font-bold">Faculty Committee Coordinator</p>
+            <p class="text-[11px] text-indigo-700">Class Representative & Staff Liaison</p>
+          </div>
+        </div>
+        <div class="border-t border-indigo-200/60 pt-2 space-y-1 text-[11px]">
+          <p><i class="fa-solid fa-envelope text-indigo-500 mr-2"></i><strong>Email:</strong> merch-committee@faculty.edu</p>
+          <p><i class="fa-solid fa-phone text-indigo-500 mr-2"></i><strong>Hotline:</strong> +1 (555) 019-2834</p>
+        </div>
+      </div>
+
+      <button onclick="toggleModal('contactRepModal', false)" class="w-full py-2.5 bg-slate-900 text-white font-bold rounded-xl text-xs transition">
+        Close
+      </button>
+    </div>
+  </div>
+
+
+  <!-- SIZE GUIDE MODAL -->
+  <div id="sizeGuideModal" class="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm hidden flex items-center justify-center p-4">
+    <div class="bg-white rounded-2xl max-w-xl w-full p-6 space-y-4 shadow-2xl border border-slate-200 max-h-[90vh] overflow-y-auto custom-scrollbar">
+      <div class="flex items-center justify-between border-b border-slate-100 pb-3">
+        <div class="flex items-center space-x-2 text-indigo-600 font-bold text-lg">
+          <i class="fa-solid fa-ruler-combined"></i>
+          <span>Apparel Size Chart (Inches)</span>
+        </div>
+        <button onclick="toggleModal('sizeGuideModal', false)" class="text-slate-400 hover:text-slate-600">
+          <i class="fa-solid fa-xmark text-lg"></i>
+        </button>
+      </div>
+
+      <div class="space-y-4 text-xs text-slate-600">
+        <div>
+          <h4 class="font-bold mb-2 text-sm text-indigo-600">Campus Cotton Shirt</h4>
+          <table class="w-full text-center border border-slate-200 rounded-lg overflow-hidden">
+            <thead class="bg-indigo-50 text-indigo-900 font-bold">
+              <tr><th class="p-2 border-b">Size</th><th class="p-2 border-b">Chest Width</th><th class="p-2 border-b">Length</th></tr>
+            </thead>
+            <tbody class="divide-y divide-slate-100">
+              <tr><td class="p-2 font-bold">S</td><td class="p-2">38"</td><td class="p-2">27"</td></tr>
+              <tr><td class="p-2 font-bold">M</td><td class="p-2">40"</td><td class="p-2">28"</td></tr>
+              <tr><td class="p-2 font-bold">L</td><td class="p-2">42"</td><td class="p-2">29"</td></tr>
+              <tr><td class="p-2 font-bold">XL</td><td class="p-2">44"</td><td class="p-2">30"</td></tr>
+              <tr><td class="p-2 font-bold">2XL</td><td class="p-2">46"</td><td class="p-2">31"</td></tr>
+              <tr><td class="p-2 font-bold">3XL</td><td class="p-2">48"</td><td class="p-2">32"</td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div>
+          <h4 class="font-bold mb-2 text-sm text-purple-600">Athletic Campus Jersey</h4>
+          <table class="w-full text-center border border-slate-200 rounded-lg overflow-hidden">
+            <thead class="bg-purple-50 text-purple-900 font-bold">
+              <tr><th class="p-2 border-b">Size</th><th class="p-2 border-b">Chest Width</th><th class="p-2 border-b">Length</th></tr>
+            </thead>
+            <tbody class="divide-y divide-slate-100">
+              <tr><td class="p-2 font-bold">S</td><td class="p-2">36"</td><td class="p-2">26.5"</td></tr>
+              <tr><td class="p-2 font-bold">M</td><td class="p-2">38.5"</td><td class="p-2">27.5"</td></tr>
+              <tr><td class="p-2 font-bold">L</td><td class="p-2">41"</td><td class="p-2">28.5"</td></tr>
+              <tr><td class="p-2 font-bold">XL</td><td class="p-2">43.5"</td><td class="p-2">29.5"</td></tr>
+              <tr><td class="p-2 font-bold">2XL</td><td class="p-2">46"</td><td class="p-2">30.5"</td></tr>
+              <tr><td class="p-2 font-bold">3XL</td><td class="p-2">48.5"</td><td class="p-2">31.5"</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <button onclick="toggleModal('sizeGuideModal', false)" class="w-full py-2.5 bg-slate-900 text-white rounded-xl font-bold text-xs">Got it</button>
+    </div>
+  </div>
+
+
+  <!-- CONFIRMATION / SUCCESS MODAL -->
+  <div id="successModal" class="fixed inset-0 z-50 bg-slate-900/70 backdrop-blur-sm hidden flex items-center justify-center p-4">
+    <div class="bg-white rounded-2xl max-w-md w-full p-6 text-center space-y-4 shadow-2xl border border-slate-100">
+      <div class="w-16 h-16 rounded-full bg-emerald-100 text-emerald-600 flex items-center justify-center mx-auto text-3xl shadow-inner">
+        <i class="fa-solid fa-check"></i>
+      </div>
+
+      <div>
+        <h3 id="confHeaderTitle" class="text-xl font-black text-slate-800">Order Confirmed!</h3>
+        <p id="confHeaderDesc" class="text-xs text-slate-500 mt-1">Your merchandise choices have been saved successfully.</p>
+      </div>
+
+      <div class="bg-slate-50 p-4 rounded-xl text-left text-xs space-y-2 border border-slate-200">
+        <div class="flex justify-between"><span class="text-slate-400">Order ID:</span><span id="confOrderId" class="font-mono font-bold text-indigo-600">#ORD-0000</span></div>
+        <div class="flex justify-between"><span class="text-slate-400">Role & ID:</span><span id="confUserIdentifier" class="font-bold text-slate-700">-</span></div>
+        <div class="flex justify-between"><span class="text-slate-400">Total Items:</span><span id="confItems" class="font-bold text-slate-700">-</span></div>
+        <div class="flex justify-between border-t border-slate-200 pt-2"><span class="font-bold text-slate-800">Total Estimated Cost:</span><span id="confTotal" class="font-extrabold text-emerald-600 text-sm">$0.00</span></div>
+      </div>
+
+      <button onclick="closeSuccessModal()" class="w-full py-3 bg-indigo-600 hover:bg-indigo-500 text-white font-bold rounded-xl text-xs shadow-md shadow-indigo-600/30 transition">
+        Done
+      </button>
+    </div>
+  </div>
+
+
+  <!-- JAVASCRIPT APP LOGIC -->
+  <script>
+    // Master Student List
+    const STUDENT_DATABASE = [
+      { reg: "2023/CS/001", name: "Alexander Wright" },
+      { reg: "2023/CS/002", name: "Sophia Chen" },
+      { reg: "2023/CS/003", name: "Marcus Johnson" },
+      { reg: "2023/CS/004", name: "Emma Watson" },
+      { reg: "2023/CS/005", name: "Liam Miller" },
+      { reg: "2023/CS/006", name: "Olivia Davis" },
+      { reg: "2023/CS/007", name: "Ethan Brown" },
+      { reg: "2023/CS/008", name: "Ava Wilson" },
+      { reg: "2023/CS/009", name: "Noah Taylor" },
+      { reg: "2023/CS/010", name: "Isabella Anderson" }
+    ];
+
+    const PRICES = { shirt: 18, jersey: 22, diary: 10, laptop: 15 };
+    const SIZES = ["S", "M", "L", "XL", "2XL", "3XL"];
+    const LAPTOP_SIZES = ["13\"", "14\"", "15.6\"", "16\"+"];
+
+    // App State
+    let selectedRole = "Student"; // "Student" | "Lecturer" | "Demonstrator"
+    let currentStep = 1;
+    let selectedItems = { shirt: false, jersey: false, diary: false, laptop: false };
+    let selectedSizes = { shirt: "M", jersey: "M", laptop: "14\"" };
+    let apparelFit = "Unisex Regular";
+    let ordersList = [];
+    let activeEditingKey = null; // Key for editing
+
+    window.onload = function() {
+      loadOrdersFromStorage();
+      populateStudentDropdown();
+      populateEditSubmittedDropdown();
+      updateStepUI();
+    };
+
+    function selectUserRole(role) {
+      selectedRole = role;
+      
+      const btnStudent = document.getElementById("roleBtnStudent");
+      const btnLecturer = document.getElementById("roleBtnLecturer");
+      const btnDemonstrator = document.getElementById("roleBtnDemonstrator");
+
+      // Reset styles
+      [btnStudent, btnLecturer, btnDemonstrator].forEach(btn => {
+        btn.className = "py-3 px-4 rounded-xl border-2 font-bold text-xs flex flex-col items-center justify-center gap-1.5 transition border-slate-200 bg-white text-slate-600 hover:border-slate-300";
+      });
+
+      if (role === 'Student') {
+        btnStudent.className = "py-3 px-4 rounded-xl border-2 font-bold text-xs flex flex-col items-center justify-center gap-1.5 transition border-indigo-600 bg-indigo-50/80 text-indigo-700";
+        document.getElementById("studentInputGroup").classList.remove("hidden");
+        document.getElementById("staffInputGroup").classList.add("hidden");
+      } else {
+        const activeBtn = role === 'Lecturer' ? btnLecturer : btnDemonstrator;
+        activeBtn.className = "py-3 px-4 rounded-xl border-2 font-bold text-xs flex flex-col items-center justify-center gap-1.5 transition border-indigo-600 bg-indigo-50/80 text-indigo-700";
+        document.getElementById("studentInputGroup").classList.add("hidden");
+        document.getElementById("staffInputGroup").classList.remove("hidden");
+      }
+
+      // Re-evaluate alerts
+      document.getElementById("alreadySubmittedAlert").classList.add("hidden");
+      document.getElementById("nextBtn").disabled = false;
+    }
+
+    function populateStudentDropdown() {
+      const select = document.getElementById("regNumberSelect");
+      select.innerHTML = `<option value="" disabled selected>-- Select your Student Reg No --</option>`;
+      STUDENT_DATABASE.forEach(s => {
+        const opt = document.createElement("option");
+        opt.value = s.reg;
+        opt.textContent = `${s.reg} - ${s.name}`;
+        select.appendChild(opt);
+      });
+    }
+
+    function populateEditSubmittedDropdown() {
+      const editSelect = document.getElementById("editRegSelect");
+      editSelect.innerHTML = `<option value="" disabled selected>-- Select from Submitted Orders (Students & Staff) --</option>`;
+
+      if (ordersList.length === 0) {
+        const opt = document.createElement("option");
+        opt.disabled = true;
+        opt.textContent = "No submitted orders recorded yet";
+        editSelect.appendChild(opt);
+        return;
+      }
+
+      ordersList.forEach(order => {
+        const opt = document.createElement("option");
+        opt.value = order.idKey;
+        const extraInfo = order.role === 'Student' ? order.regNo : `${order.staffId} (${order.dept})`;
+        opt.textContent = `[${order.role}] ${extraInfo} - ${order.name}`;
+        editSelect.appendChild(opt);
+      });
+    }
+
+    function handleRegSelect(regVal) {
+      document.getElementById("regError").classList.add("hidden");
+      const foundStudent = STUDENT_DATABASE.find(s => s.reg === regVal);
+      const alertBox = document.getElementById("alreadySubmittedAlert");
+      const nextBtn = document.getElementById("nextBtn");
+
+      if (foundStudent) {
+        document.getElementById("studentNameInput").value = foundStudent.name;
+      }
+
+      // Check duplicate
+      const existingOrder = ordersList.find(o => o.role === "Student" && o.regNo === regVal);
+
+      if (existingOrder && activeEditingKey !== existingOrder.idKey) {
+        document.getElementById("submittedStudentName").textContent = foundStudent ? foundStudent.name : 'Student';
+        alertBox.classList.remove("hidden");
+        nextBtn.disabled = true;
+      } else {
+        alertBox.classList.add("hidden");
+        nextBtn.disabled = false;
+      }
+    }
+
+    function loadSelectedOrderForEdit() {
+      const regVal = document.getElementById("regNumberSelect").value;
+      if (regVal) {
+        const found = ordersList.find(o => o.role === "Student" && o.regNo === regVal);
+        if (found) populateFormForEditing(found);
+      }
+    }
+
+    function loadOrderFromEditSelect(idKeyVal) {
+      if (!idKeyVal) return;
+      const found = ordersList.find(o => o.idKey === idKeyVal);
+      if (found) populateFormForEditing(found);
+    }
+
+    function triggerEditFromDropdown() {
+      const keyVal = document.getElementById("editRegSelect").value;
+      if (!keyVal) {
+        alert("Please select a response from the dropdown!");
+        return;
+      }
+      loadOrderFromEditSelect(keyVal);
+    }
+
+    function populateFormForEditing(orderObj) {
+      activeEditingKey = orderObj.idKey;
+      selectUserRole(orderObj.role);
+
+      if (orderObj.role === "Student") {
+        document.getElementById("regNumberSelect").value = orderObj.regNo;
+        document.getElementById("studentNameInput").value = orderObj.name;
+      } else {
+        document.getElementById("staffIdInput").value = orderObj.staffId || "";
+        document.getElementById("staffNameInput").value = orderObj.name || "";
+        document.getElementById("staffDeptSelect").value = orderObj.dept || "";
+      }
+
+      document.getElementById("orderNotes").value = orderObj.notes || "";
+      document.getElementById("alreadySubmittedAlert").classList.add("hidden");
+      document.getElementById("nextBtn").disabled = false;
+
+      // Populate Items & Sizes
+      ['shirt', 'jersey', 'diary', 'laptop'].forEach(i => {
+        toggleItem(i, !!orderObj.items[i]);
+      });
+
+      if (orderObj.sizes.shirt) selectedSizes.shirt = orderObj.sizes.shirt;
+      if (orderObj.sizes.jersey) selectedSizes.jersey = orderObj.sizes.jersey;
+      if (orderObj.sizes.laptop) selectedSizes.laptop = orderObj.sizes.laptop;
+      if (orderObj.fit) apparelFit = orderObj.fit;
+
+      // Banner Updates
+      document.getElementById("editingModeBanner").classList.remove("hidden");
+      const displayId = orderObj.role === "Student" ? orderObj.regNo : orderObj.staffId;
+      document.getElementById("editingIdentifierText").textContent = `[${orderObj.role}] ${displayId} (${orderObj.name})`;
+      
+      showToast(`Loaded existing order for ${displayId}`);
+    }
+
+    function cancelEditingMode() {
+      activeEditingKey = null;
+      document.getElementById("editingModeBanner").classList.add("hidden");
+      document.getElementById("alreadySubmittedAlert").classList.add("hidden");
+      document.getElementById("nextBtn").disabled = false;
+
+      document.getElementById("regNumberSelect").value = "";
+      document.getElementById("editRegSelect").value = "";
+      document.getElementById("studentNameInput").value = "";
+      document.getElementById("staffIdInput").value = "";
+      document.getElementById("staffNameInput").value = "";
+      document.getElementById("staffDeptSelect").value = "";
+      document.getElementById("orderNotes").value = "";
+      
+      ['shirt', 'jersey', 'diary', 'laptop'].forEach(i => toggleItem(i, false));
+      
+      goToStep(1);
+    }
+
+    // Step Navigation Engine
+    function navigateStep(direction) {
+      if (direction === 1) {
+        // Validate before proceeding
+        if (currentStep === 1) {
+          if (selectedRole === "Student") {
+            const regVal = document.getElementById("regNumberSelect").value;
+            if (!regVal) {
+              document.getElementById("regError").classList.remove("hidden");
+              return;
+            }
+            const existing = ordersList.find(o => o.role === "Student" && o.regNo === regVal);
+            if (existing && activeEditingKey !== existing.idKey) {
+              document.getElementById("alreadySubmittedAlert").classList.remove("hidden");
+              return;
+            }
+          } else {
+            const staffId = document.getElementById("staffIdInput").value.trim();
+            const staffName = document.getElementById("staffNameInput").value.trim();
+            const staffDept = document.getElementById("staffDeptSelect").value;
+
+            let valid = true;
+            if (!staffId) { document.getElementById("staffIdError").classList.remove("hidden"); valid = false; } else document.getElementById("staffIdError").classList.add("hidden");
+            if (!staffName) { document.getElementById("staffNameError").classList.remove("hidden"); valid = false; } else document.getElementById("staffNameError").classList.add("hidden");
+            if (!staffDept) { document.getElementById("staffDeptError").classList.remove("hidden"); valid = false; } else document.getElementById("staffDeptError").classList.add("hidden");
+
+            if (!valid) return;
+          }
+        } else if (currentStep === 2) {
+          const itemCount = Object.values(selectedItems).filter(Boolean).length;
+          if (itemCount === 0) {
+            alert("Please select at least one merchandise item before proceeding!");
+            return;
+          }
+          buildStep3Customizations();
+        } else if (currentStep === 3) {
+          buildStep4Review();
+        } else if (currentStep === 4) {
+          submitOrder();
+          return;
+        }
+      }
+
+      currentStep += direction;
+      if (currentStep < 1) currentStep = 1;
+      if (currentStep > 4) currentStep = 4;
+
+      updateStepUI();
+    }
+
+    function goToStep(stepNum) {
+      currentStep = stepNum;
+      updateStepUI();
+    }
+
+    function updateStepUI() {
+      // Hide all pages
+      document.querySelectorAll('.step-page').forEach(p => p.classList.add('hidden'));
+      document.getElementById(`step-${currentStep}`).classList.remove('hidden');
+
+      // Update Header Text & Progress Bar
+      const titles = ["Role & Identity", "Select Items", "Customization", "Review & Confirm"];
+      document.getElementById("stepCounterText").textContent = `Step ${currentStep} of 4`;
+      document.getElementById("stepTitleHeader").textContent = titles[currentStep - 1];
+      document.getElementById("progressBar").style.width = `${(currentStep / 4) * 100}%`;
+
+      // Update Step Nodes Styling
+      for (let i = 1; i <= 4; i++) {
+        const node = document.getElementById(`node-${i}`);
+        const circle = node.querySelector('div');
+        if (i <= currentStep) {
+          node.className = "step-node font-bold text-xs text-indigo-600 flex flex-col items-center space-y-1";
+          circle.className = "w-7 h-7 rounded-full bg-indigo-600 text-white flex items-center justify-center text-xs font-bold shadow-md shadow-indigo-500/20";
+        } else {
+          node.className = "step-node font-medium text-xs text-slate-400 flex flex-col items-center space-y-1";
+          circle.className = "w-7 h-7 rounded-full bg-slate-200 text-slate-600 flex items-center justify-center text-xs font-bold";
+        }
+      }
+
+      // Prev Button State
+      const prevBtn = document.getElementById("prevBtn");
+      prevBtn.disabled = (currentStep === 1);
+
+      // Next / Submit Button Text
+      const nextBtnText = document.getElementById("nextBtnText");
+      const nextBtnIcon = document.getElementById("nextBtnIcon");
+
+      if (currentStep === 4) {
+        nextBtnText.textContent = activeEditingKey ? "Update Order" : "Submit Order";
+        nextBtnIcon.className = "fa-solid fa-check ml-1.5";
+      } else {
+        nextBtnText.textContent = "Next Step";
+        nextBtnIcon.className = "fa-solid fa-arrow-right ml-1.5";
+      }
+
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    function toggleItem(item, forceState) {
+      selectedItems[item] = forceState !== undefined ? forceState : !selectedItems[item];
+      const card = document.getElementById(`card-${item}`);
+      const btn = document.getElementById(`btnToggle${item.charAt(0).toUpperCase() + item.slice(1)}`);
+
+      if (selectedItems[item]) {
+        card.classList.remove('border-slate-200');
+        card.classList.add('border-indigo-500', 'ring-2', 'ring-indigo-500/20');
+        btn.className = "px-3 py-1 rounded-lg font-bold bg-indigo-600 text-white";
+        btn.innerHTML = '<i class="fa-solid fa-check mr-1"></i> Added';
+      } else {
+        card.classList.remove('border-indigo-500', 'ring-2', 'ring-indigo-500/20');
+        card.classList.add('border-slate-200');
+        btn.className = "px-3 py-1 rounded-lg font-bold bg-slate-100 text-slate-600";
+        btn.innerHTML = "+ Add";
+      }
+    }
+
+    function selectAllBundle() {
+      ['shirt', 'jersey', 'diary', 'laptop'].forEach(i => toggleItem(i, true));
+    }
+
+    // Dynamic Step 3 Builder with Staff Options
+    function buildStep3Customizations() {
+      const container = document.getElementById("customizationContainer");
+      container.innerHTML = "";
+
+      const isStaff = selectedRole !== "Student";
+
+      if (selectedItems.shirt) {
+        container.innerHTML += `
+          <div class="bg-indigo-50/50 p-4 rounded-xl border border-indigo-100 space-y-3">
+            <h4 class="font-bold text-slate-800 text-sm text-indigo-700 flex items-center gap-2">
+              <i class="fa-solid fa-shirt"></i> Campus Cotton Shirt Options
+            </h4>
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div>
+                <label class="block text-xs font-bold text-slate-700 uppercase mb-1">Select Size</label>
+                <div class="grid grid-cols-6 gap-1">
+                  ${SIZES.map(s => `
+                    <button type="button" onclick="setOptionSize('shirt', '${s}')" class="py-1.5 rounded-lg text-xs font-bold border transition ${selectedSizes.shirt === s ? 'bg-indigo-600 text-white border-indigo-600' : 'bg-white text-slate-700 border-slate-200'}">${s}</button>
+                  `).join('')}
+                </div>
+              </div>
+              <div>
+                <label class="block text-xs font-bold text-slate-700 uppercase mb-1">Cut / Fit Style</label>
+                <select onchange="apparelFit = this.value" class="w-full bg-white border border-slate-300 rounded-lg p-2 text-xs font-semibold">
+                  <option value="Unisex Regular" ${apparelFit === 'Unisex Regular' ? 'selected' : ''}>Unisex Regular</option>
+                  <option value="Mens Tailored Fit" ${apparelFit === 'Mens Tailored Fit' ? 'selected' : ''}>Mens Tailored Fit</option>
+                  <option value="Womens Slim Cut" ${apparelFit === 'Womens Slim Cut' ? 'selected' : ''}>Womens Cut</option>
+                  ${!isStaff ? `<option value="Oversized Streetwear" ${apparelFit === 'Oversized Streetwear' ? 'selected' : ''}>Oversized Streetwear</option>` : ''}
+                </select>
+              </div>
+            </div>
+            ${isStaff ? `
+              <div class="pt-2 border-t border-indigo-100/80">
+                <label class="block text-xs font-bold text-indigo-900 uppercase mb-1"><i class="fa-solid fa-crown text-amber-500 mr-1"></i> Staff Chest Title Embroidery (Optional)</label>
+                <input type="text" id="shirtEmbroideryInput" placeholder="e.g. Dr. Perera or Lecturer" class="w-full bg-white border border-indigo-200 rounded-lg p-2 text-xs font-semibold focus:ring-2 focus:ring-indigo-500 outline-none" />
+              </div>
+            ` : ''}
+          </div>
+        `;
+      }
+
+      if (selectedItems.jersey) {
+        container.innerHTML += `
+          <div class="bg-purple-50/50 p-4 rounded-xl border border-purple-100 space-y-3">
+            <h4 class="font-bold text-slate-800 text-sm text-purple-700 flex items-center gap-2">
+              <i class="fa-solid fa-vest"></i> Athletic Jersey Options
+            </h4>
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div>
+                <label class="block text-xs font-bold text-slate-700 uppercase mb-1">Select Size</label>
+                <div class="grid grid-cols-6 gap-1">
+                  ${SIZES.map(s => `
+                    <button type="button" onclick="setOptionSize('jersey', '${s}')" class="py-1.5 rounded-lg text-xs font-bold border transition ${selectedSizes.jersey === s ? 'bg-purple-600 text-white border-purple-600' : 'bg-white text-slate-700 border-slate-200'}">${s}</button>
+                  `).join('')}
+                </div>
+              </div>
+              <div>
+                <label class="block text-xs font-bold text-slate-700 uppercase mb-1">Custom Back Print / Title</label>
+                <input type="text" id="jerseyCustomName" placeholder="${isStaff ? 'e.g. PROF. SILVA / ZOOLOGY' : 'e.g. ALEX #26'}" class="w-full bg-white border border-slate-300 rounded-lg p-2 text-xs font-semibold outline-none focus:ring-2 focus:ring-purple-500" />
+              </div>
+            </div>
+          </div>
+        `;
+      }
+
+      if (selectedItems.laptop) {
+        container.innerHTML += `
+          <div class="bg-teal-50/50 p-4 rounded-xl border border-teal-100 space-y-3">
+            <h4 class="font-bold text-slate-800 text-sm text-teal-700 flex items-center gap-2">
+              <i class="fa-solid fa-laptop"></i> Laptop Sleeve Size
+            </h4>
+            <div class="grid grid-cols-4 gap-2">
+              ${LAPTOP_SIZES.map(s => `
+                <button type="button" onclick="setOptionSize('laptop', '${s}')" class="py-2 rounded-lg text-xs font-bold border transition ${selectedSizes.laptop === s ? 'bg-teal-600 text-white border-teal-600' : 'bg-white text-slate-700 border-slate-200'}">${s}</button>
+              `).join('')}
+            </div>
+          </div>
+        `;
+      }
+
+      if (selectedItems.diary && !selectedItems.shirt && !selectedItems.jersey && !selectedItems.laptop) {
+        container.innerHTML = `<p class="text-xs text-slate-500 italic">No sizing options required for the Academic Hardcover Diary!</p>`;
+      }
+    }
+
+    function setOptionSize(item, size) {
+      selectedSizes[item] = size;
+      buildStep3Customizations();
+    }
+
+    // Dynamic Step 4 Review Builder
+    function buildStep4Review() {
+      const isStudent = selectedRole === "Student";
+      const name = isStudent ? document.getElementById("studentNameInput").value : document.getElementById("staffNameInput").value;
+      const displayId = isStudent ? document.getElementById("regNumberSelect").value : document.getElementById("staffIdInput").value;
+      const subDetail = isStudent ? "Class of 2026 Student" : `${selectedRole} • Dept of ${document.getElementById("staffDeptSelect").value}`;
+
+      document.getElementById("reviewRoleBadge").textContent = selectedRole;
+      document.getElementById("reviewIdText").textContent = displayId;
+      document.getElementById("reviewNameText").textContent = name;
+      document.getElementById("reviewSubDetailText").textContent = subDetail;
+
+      let subtotal = 0;
+      let count = 0;
+      const tbody = document.getElementById("reviewTableBody");
+      tbody.innerHTML = "";
+
+      if (selectedItems.shirt) {
+        subtotal += PRICES.shirt; count++;
+        const embroidery = document.getElementById("shirtEmbroideryInput")?.value;
+        const embText = embroidery ? ` • Embroidery: "${embroidery}"` : '';
+        tbody.innerHTML += `
+          <tr>
+            <td class="p-3 font-bold">Campus Cotton Shirt</td>
+            <td class="p-3">Size ${selectedSizes.shirt} • ${apparelFit}${embText}</td>
+            <td class="p-3 text-right font-bold">$${PRICES.shirt}</td>
+          </tr>
+        `;
+      }
+
+      if (selectedItems.jersey) {
+        subtotal += PRICES.jersey; count++;
+        const customName = document.getElementById("jerseyCustomName")?.value || 'N/A';
+        tbody.innerHTML += `
+          <tr>
+            <td class="p-3 font-bold">Athletic Jersey</td>
+            <td class="p-3">Size ${selectedSizes.jersey} • Print: ${customName}</td>
+            <td class="p-3 text-right font-bold">$${PRICES.jersey}</td>
+          </tr>
+        `;
+      }
+
+      if (selectedItems.diary) {
+        subtotal += PRICES.diary; count++;
+        tbody.innerHTML += `
+          <tr>
+            <td class="p-3 font-bold">Academic Hardcover Diary</td>
+            <td class="p-3">Faculty / Student Gold Crest Edition</td>
+            <td class="p-3 text-right font-bold">$${PRICES.diary}</td>
+          </tr>
+        `;
+      }
+
+      if (selectedItems.laptop) {
+        subtotal += PRICES.laptop; count++;
+        tbody.innerHTML += `
+          <tr>
+            <td class="p-3 font-bold">Neoprene Laptop Case</td>
+            <td class="p-3">Size ${selectedSizes.laptop}</td>
+            <td class="p-3 text-right font-bold">$${PRICES.laptop}</td>
+          </tr>
+        `;
+      }
+
+      const isBundle = count === 4;
+      const finalTotal = isBundle ? subtotal * 0.9 : subtotal;
+
+      if (isBundle) {
+        document.getElementById("reviewBundleDiscountBadge").classList.remove("hidden");
+      } else {
+        document.getElementById("reviewBundleDiscountBadge").classList.add("hidden");
+      }
+
+      document.getElementById("reviewTotalPrice").textContent = `$${finalTotal.toFixed(2)}`;
+    }
+
+    function submitOrder() {
+      const isStudent = selectedRole === "Student";
+      const name = isStudent ? document.getElementById("studentNameInput").value : document.getElementById("staffNameInput").value;
+      const regNo = isStudent ? document.getElementById("regNumberSelect").value : "";
+      const staffId = !isStudent ? document.getElementById("staffIdInput").value : "";
+      const dept = !isStudent ? document.getElementById("staffDeptSelect").value : "Student Batch";
+      const notes = document.getElementById("orderNotes").value;
+      const jerseyPrint = document.getElementById("jerseyCustomName")?.value || "N/A";
+      const shirtEmbroidery = document.getElementById("shirtEmbroideryInput")?.value || "N/A";
+
+      let subtotal = 0;
+      let count = 0;
+      if (selectedItems.shirt) { subtotal += PRICES.shirt; count++; }
+      if (selectedItems.jersey) { subtotal += PRICES.jersey; count++; }
+      if (selectedItems.diary) { subtotal += PRICES.diary; count++; }
+      if (selectedItems.laptop) { subtotal += PRICES.laptop; count++; }
+      const finalTotal = count === 4 ? subtotal * 0.9 : subtotal;
+
+      const now = new Date();
+      const timestamp = now.toLocaleDateString([], { month: '2-digit', day: '2-digit', year: 'numeric' }) + ", " + now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+
+      // Generate or reuse key
+      const key = activeEditingKey || "KEY-" + Date.now();
+
+      const orderData = {
+        idKey: key,
+        id: activeEditingKey ? activeEditingKey.slice(-8) : "ORD-" + Math.floor(1000 + Math.random() * 9000),
+        role: selectedRole,
+        timestamp: timestamp,
+        regNo: regNo,
+        staffId: staffId,
+        name: name,
+        dept: dept,
+        items: { ...selectedItems },
+        sizes: { ...selectedSizes },
+        fit: apparelFit,
+        jerseyPrint: jerseyPrint,
+        shirtEmbroidery: shirtEmbroidery,
+        totalCost: finalTotal,
+        notes: notes
+      };
+
+      if (activeEditingKey) {
+        const idx = ordersList.findIndex(o => o.idKey === activeEditingKey);
+        if (idx !== -1) ordersList[idx] = orderData;
+      } else {
+        ordersList.unshift(orderData);
+      }
+
+      saveOrdersToStorage();
+      populateEditSubmittedDropdown();
+      showConfirmationModal(orderData, !!activeEditingKey);
+    }
+
+    function showConfirmationModal(orderObj, isUpdate) {
+      document.getElementById("confHeaderTitle").textContent = isUpdate ? "Order Updated!" : "Order Saved!";
+      document.getElementById("confOrderId").textContent = "#" + orderObj.id;
+      const identifier = orderObj.role === "Student" ? `${orderObj.regNo} (${orderObj.name})` : `[${orderObj.role}] ${orderObj.staffId} (${orderObj.name})`;
+      document.getElementById("confUserIdentifier").textContent = identifier;
+      
+      const count = Object.values(orderObj.items).filter(Boolean).length;
+      document.getElementById("confItems").textContent = count + " items";
+      document.getElementById("confTotal").textContent = "$" + orderObj.totalCost.toFixed(2);
+
+      toggleModal('successModal', true);
+    }
+
+    function closeSuccessModal() {
+      toggleModal('successModal', false);
+      cancelEditingMode();
+    }
+
+    function showToast(msg) {
+      const toast = document.getElementById("toastNotification");
+      document.getElementById("toastMessage").textContent = msg;
+      toast.classList.remove("translate-x-full");
+      setTimeout(() => { toast.classList.add("translate-x-full"); }, 3000);
+    }
+
+    function toggleModal(modalId, show) {
+      const modal = document.getElementById(modalId);
+      if (show) modal.classList.remove("hidden");
+      else modal.classList.add("hidden");
+    }
+
+    let isAdminView = false;
+    function toggleAdminView() {
+      isAdminView = !isAdminView;
+      const userPortal = document.getElementById("userPortalView");
+      const adminDash = document.getElementById("adminDashboardView");
+      const btnText = document.getElementById("adminBtnText");
+
+      if (isAdminView) {
+        userPortal.classList.add("hidden");
+        adminDash.classList.remove("hidden");
+        btnText.textContent = "Back to Wizard";
+        renderAdminDashboard();
+      } else {
+        adminDash.classList.add("hidden");
+        userPortal.classList.remove("hidden");
+        btnText.textContent = "Admin Dashboard";
+      }
+    }
+
+    function renderAdminDashboard() {
+      const roleFilter = document.getElementById("adminRoleFilter")?.value || "ALL";
+
+      let filteredOrders = ordersList;
+      if (roleFilter !== "ALL") {
+        filteredOrders = ordersList.filter(o => o.role === roleFilter);
+      }
+
+      // Overall Metrics
+      const totalSubmissions = ordersList.length;
+      let studentCount = 0, lecturerCount = 0, demonstratorCount = 0, totalRev = 0;
+      let shirtCount = 0, jerseyCount = 0, diaryCount = 0, laptopCount = 0;
+
+      ordersList.forEach(o => {
+        if (o.role === 'Student') studentCount++;
+        else if (o.role === 'Lecturer') lecturerCount++;
+        else if (o.role === 'Demonstrator') demonstratorCount++;
+
+        if (o.items.shirt) shirtCount++;
+        if (o.items.jersey) jerseyCount++;
+        if (o.items.diary) diaryCount++;
+        if (o.items.laptop) laptopCount++;
+        totalRev += o.totalCost;
+      });
+
+      document.getElementById("statTotalSubmissions").textContent = totalSubmissions;
+      document.getElementById("statTotalStudents").textContent = studentCount;
+      document.getElementById("statTotalLecturers").textContent = lecturerCount;
+      document.getElementById("statTotalDemonstrators").textContent = demonstratorCount;
+      document.getElementById("statTotalRevenue").textContent = "$" + totalRev.toFixed(0);
+
+      // Item Demand Bars
+      const maxCount = Math.max(totalSubmissions, 1);
+      const itemsBarData = [
+        { label: "Campus Shirt", count: shirtCount, color: "bg-indigo-600" },
+        { label: "Campus Jersey", count: jerseyCount, color: "bg-purple-600" },
+        { label: "Academic Diary", count: diaryCount, color: "bg-amber-500" },
+        { label: "Laptop Case", count: laptopCount, color: "bg-teal-500" },
+      ];
+
+      document.getElementById("adminItemBars").innerHTML = itemsBarData.map(d => {
+        const pct = Math.round((d.count / maxCount) * 100);
+        return `
+          <div>
+            <div class="flex justify-between text-xs font-semibold mb-1">
+              <span>${d.label}</span><span>${d.count} requested (${pct}%)</span>
+            </div>
+            <div class="w-full h-2.5 bg-slate-100 rounded-full overflow-hidden">
+              <div class="h-full ${d.color} transition-all duration-500" style="width: ${pct}%"></div>
+            </div>
+          </div>
+        `;
+      }).join('');
+
+      // Render Admin Table
+      const tableBody = document.getElementById("adminTableBody");
+      document.getElementById("tableCountText").textContent = `(${filteredOrders.length} entries)`;
+
+      if (filteredOrders.length === 0) {
+        tableBody.innerHTML = `<tr><td colspan="8" class="p-6 text-center text-slate-400">No matching responses found.</td></tr>`;
+        return;
+      }
+
+      tableBody.innerHTML = filteredOrders.map(o => {
+        const itemsFormatted = [];
+        if (o.items.shirt) itemsFormatted.push('Shirt');
+        if (o.items.jersey) itemsFormatted.push('Jersey');
+        if (o.items.diary) itemsFormatted.push('Diary');
+        if (o.items.laptop) itemsFormatted.push('Case');
+
+        const roleBadgeColor = o.role === 'Student' ? 'bg-indigo-100 text-indigo-700' : o.role === 'Lecturer' ? 'bg-purple-100 text-purple-700' : 'bg-amber-100 text-amber-700';
+        const displayId = o.role === 'Student' ? o.regNo : o.staffId;
+        const subInfo = o.role === 'Student' ? 'Student' : o.dept;
+
+        const sizesSummary = [];
+        if (o.items.shirt) sizesSummary.push(`S:${o.sizes.shirt}`);
+        if (o.items.jersey) sizesSummary.push(`J:${o.sizes.jersey}`);
+        if (o.items.laptop) sizesSummary.push(`L:${o.sizes.laptop}`);
+
+        return `
+          <tr class="hover:bg-slate-50 transition">
+            <td class="p-3.5"><span class="px-2 py-0.5 rounded-md font-bold text-[10px] ${roleBadgeColor}">${o.role}</span></td>
+            <td class="p-3.5 font-bold text-slate-800">${displayId}</td>
+            <td class="p-3.5 font-semibold text-slate-800">${o.name}</td>
+            <td class="p-3.5 text-slate-500">${subInfo}</td>
+            <td class="p-3.5"><span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-slate-100 text-slate-700">${itemsFormatted.join(', ')}</span></td>
+            <td class="p-3.5 font-mono text-[11px]">${sizesSummary.join(' | ') || '-'}</td>
+            <td class="p-3.5 font-extrabold text-slate-800">$${o.totalCost.toFixed(2)}</td>
+            <td class="p-3.5 text-center space-x-1">
+              <button onclick="editOrderFromAdmin('${o.idKey}')" title="Edit Order" class="px-2 py-1 bg-indigo-50 text-indigo-600 rounded-lg text-xs font-bold"><i class="fa-solid fa-pen-to-square"></i></button>
+              <button onclick="deleteOrderFromAdmin('${o.idKey}')" title="Delete Order" class="px-2 py-1 bg-red-50 text-red-600 rounded-lg text-xs font-bold"><i class="fa-solid fa-trash-can"></i></button>
+            </td>
+          </tr>
+        `;
+      }).join('');
+    }
+
+    function editOrderFromAdmin(idKey) {
+      const found = ordersList.find(o => o.idKey === idKey);
+      if (found) {
+        toggleAdminView();
+        populateFormForEditing(found);
+      }
+    }
+
+    function deleteOrderFromAdmin(idKey) {
+      if (confirm("Are you sure you want to delete this response record?")) {
+        ordersList = ordersList.filter(o => o.idKey !== idKey);
+        saveOrdersToStorage();
+        populateEditSubmittedDropdown();
+        renderAdminDashboard();
+        showToast("Response deleted");
+      }
+    }
+
+    function exportCSV() {
+      if (ordersList.length === 0) {
+        alert("No data available to export!");
+        return;
+      }
+
+      let csv = "Order ID,Timestamp,Role,ID/Reg Number,Name,Department/Info,Shirt,Shirt Size,Fit,Shirt Embroidery,Jersey,Jersey Size,Jersey Print,Diary,Laptop Case,Laptop Size,Total Cost ($),Notes\n";
+
+      ordersList.forEach(o => {
+        const idVal = o.role === 'Student' ? o.regNo : o.staffId;
+        csv += `"${o.id}","${o.timestamp}","${o.role}","${idVal}","${o.name}","${o.dept}","${o.items.shirt}","${o.sizes.shirt}","${o.fit}","${o.shirtEmbroidery}","${o.items.jersey}","${o.sizes.jersey}","${o.jerseyPrint}","${o.items.diary}","${o.items.laptop}","${o.sizes.laptop}","${o.totalCost}","${(o.notes || '').replace(/"/g, '""')}"\n`;
+      });
+
+      const blob = new Blob([csv], { type: 'text/csv' });
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.setAttribute('href', url);
+      a.setAttribute('download', `Faculty_Merch_Orders_${new Date().toISOString().slice(0,10)}.csv`);
+      a.click();
+    }
+
+    function saveOrdersToStorage() {
+      try {
+        localStorage.setItem("campus_faculty_merch_orders", JSON.stringify(ordersList));
+      } catch(e) { console.error(e); }
+    }
+
+    function loadOrdersFromStorage() {
+      try {
+        const saved = localStorage.getItem("campus_faculty_merch_orders");
+        if (saved) {
+          ordersList = JSON.parse(saved);
+        } else {
+          ordersList = [
+            {
+              idKey: "KEY-1",
+              id: "ORD-1012",
+              role: "Student",
+              timestamp: "10/24/2026, 02:15 PM",
+              regNo: "2023/CS/001",
+              staffId: "",
+              name: "Alexander Wright",
+              dept: "Student Batch",
+              items: { shirt: true, jersey: true, diary: true, laptop: false },
+              sizes: { shirt: "L", jersey: "L", laptop: "14\"" },
+              fit: "Unisex Regular",
+              jerseyPrint: "ALEX #01",
+              shirtEmbroidery: "N/A",
+              totalCost: 50,
+              notes: "Prefer navy blue"
+            },
+            {
+              idKey: "KEY-2",
+              id: "ORD-1015",
+              role: "Lecturer",
+              timestamp: "10/24/2026, 03:40 PM",
+              regNo: "",
+              staffId: "STF-204",
+              name: "Dr. K. L. Perera",
+              dept: "Computer Science",
+              items: { shirt: true, jersey: false, diary: true, laptop: true },
+              sizes: { shirt: "XL", jersey: "XL", laptop: "15.6\"" },
+              fit: "Mens Tailored Fit",
+              jerseyPrint: "N/A",
+              shirtEmbroidery: "Dr. Perera",
+              totalCost: 43,
+              notes: "Chest logo embroidery"
+            }
+          ];
+          saveOrdersToStorage();
+        }
+      } catch(e) { ordersList = []; }
+    }
+
+    function clearAllData() {
+      if (confirm("Are you sure you want to clear all recorded survey responses?")) {
+        ordersList = [];
+        saveOrdersToStorage();
+        populateEditSubmittedDropdown();
+        renderAdminDashboard();
+        showToast("Database cleared!");
+      }
+    }
+  </script>
+</body>
+</html>
